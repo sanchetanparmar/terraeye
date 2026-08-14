@@ -1,18 +1,16 @@
-name: TerraEye Review
+name: Self-test TerraEye
 
+# Dogfood: when this repo's own Terraform fixtures change, run the local action.
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+    types: [opened, synchronize, reopened]
     paths:
       - "**/*.tf"
       - "**/*.tfvars"
-      - "**/*.tf.json"
-      - "**/terraform/**"
-      - "terraeye.yml"
-      - ".github/workflows/terraeye.yml"
+      - "tests/fixtures/**"
+      - "action.yml"
+      - "dist/index.js"
+      - "src/**"
 
 permissions:
   contents: read
@@ -24,45 +22,18 @@ jobs:
     name: Terraform AI Review
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-
-      # Optional: generate a plan for richer reviews
-      # - name: Terraform Init
-      #   working-directory: terraform
-      #   run: terraform init -input=false
-      #
-      # - name: Terraform Plan
-      #   working-directory: terraform
-      #   run: |
-      #     terraform plan -input=false -out=tfplan
-      #     terraform show -json tfplan > tfplan.json
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
-
-      - name: Install TerraEye
-        run: npm ci && npm run build:action
-
-      - name: Run TerraEye
+          cache: npm
+      - run: npm ci && npm run build:action
+      - name: Run TerraEye (local action)
         uses: ./
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          config-path: config/terraeye.yml
-          # plan-file: terraform/tfplan.json
-          fail-on: critical,high
+          config-path: terraeye.yml
+          plan-file: tests/fixtures/plan.json
+          fail-on: none
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

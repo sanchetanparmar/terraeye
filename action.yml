@@ -11,11 +11,11 @@ inputs:
     required: false
     default: ${{ github.token }}
   config-path:
-    description: Path to terraeye.yml
+    description: Path to terraeye.yml (in the consumer repository)
     required: false
     default: terraeye.yml
   working-directory:
-    description: Directory containing Terraform root
+    description: Directory containing Terraform root in the consumer repository
     required: false
     default: .
   plan-file:
