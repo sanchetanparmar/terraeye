@@ -22,7 +22,7 @@ resource "aws_security_group" "app" {
 resource "aws_db_instance" "production" {
   identifier             = "prod-db"
   engine                 = "postgres"
-  instance_class         = "db.t3.medium"
+  instance_class         = "db.t3.xlarge"
   allocated_storage      = 20
   username               = "admin"
   password               = "supersecret"

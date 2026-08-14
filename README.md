@@ -73,6 +73,66 @@ Consumers pin a tag (`@v0.1.0`) or a major moving tag (`@v1`).
 - Optional Terraform plan JSON, Checkov/TFLint/Trivy, AI summary
 - Configurable `fail_on` for the GitHub Check
 
+## How it works (what produces the results)
+
+TerraEye does **not** use a separate hosted backend or database.  
+It runs inside **GitHub Actions** (or locally via the CLI) and builds the review from these sources:
+
+```text
+PR / local Terraform files
+        ↓
+┌──────────────────────────────────────┐
+│ 1. GitHub API                        │
+│    Changed files + diff patches      │
+│    Posts summary comment, inline     │
+│    notes, and Check status           │
+├──────────────────────────────────────┤
+│ 2. Builtin Terraform rules           │
+│    Scans .tf for AWS security issues │
+│    (open SG/SSH, public RDS/S3,      │
+│     IAM wildcards, hardcoded secrets)│
+├──────────────────────────────────────┤
+│ 3. Terraform plan JSON (optional)    │
+│    create / change / destroy /       │
+│    replace detection                 │
+├──────────────────────────────────────┤
+│ 4. Cost engine                       │
+│    Local price heuristics from plan  │
+│    (no AWS Billing API)              │
+├──────────────────────────────────────┤
+│ 5. Optional scanners                 │
+│    Checkov / TFLint / Trivy          │
+│    (off by default)                  │
+├──────────────────────────────────────┤
+│ 6. Risk engine                       │
+│    Scores findings + plan impact     │
+├──────────────────────────────────────┤
+│ 7. AI summary (optional)             │
+│    OpenAI or Anthropic — only if     │
+│    API key is set in secrets/env     │
+└──────────────────────────────────────┘
+        ↓
+PR comment + Check + inline findings
+```
+
+| Piece | Role |
+|--------|------|
+| `GITHUB_TOKEN` | Read PR files/diff; write comment & check |
+| Builtin rules | Our TypeScript security/reliability checks on `.tf` |
+| `plan-file` | Your `terraform show -json` output (best signal) |
+| Cost module | Approximate monthly deltas from the plan |
+| Checkov / TFLint / Trivy | Extra scanners if enabled and installed |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Optional short recommendation text only |
+
+Same engine for **local CLI** and **GitHub Action** — only the entrypoint differs (`dist/cli.js` vs `dist/index.js`).
+
+### Secrets & credentials
+
+- TerraEye does **not** store cloud credentials or API keys in this repo.
+- Use GitHub Actions secrets (`secrets.GITHUB_TOKEN`, `secrets.OPENAI_API_KEY`, etc.).
+- Never commit PATs, AWS keys, or `.env` files.
+- Test fixtures may contain **fake** passwords (e.g. `supersecret`) only to exercise the scanner.
+
 ## Optional plan input
 
 ```yaml
@@ -88,6 +148,28 @@ Consumers pin a tag (`@v0.1.0`) or a major moving tag (`@v1`).
   with:
     plan-file: infra/tfplan.json
 ```
+
+## Optional cost analysis
+
+Cost estimation is **on by default** (`cost.enabled: true`).
+
+It reads your Terraform plan and estimates monthly delta for common AWS resources (EC2, RDS, NAT, ALB, EKS nodes, etc.).
+
+```yaml
+cost:
+  enabled: true
+  currency: USD
+```
+
+Requires `plan-file` for meaningful numbers:
+
+```yaml
+- uses: sanchetanparmar/terraeye@v0.1.0
+  with:
+    plan-file: infra/tfplan.json
+```
+
+Estimates are approximate on-demand list prices — not a billing quote.
 
 ## Configuration (`terraeye.yml`)
 

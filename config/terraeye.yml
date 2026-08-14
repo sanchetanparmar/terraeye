@@ -25,6 +25,7 @@ ai:
 
 cost:
   enabled: true
+  currency: USD
 
 scanners:
   builtin: true

@@ -5,7 +5,8 @@ import { scanTerraformFiles } from "./scanners/builtin.js";
 import { runCheckov, runTfLint, runTrivy } from "./scanners/external.js";
 import { loadPlanFile } from "./terraform/plan.js";
 import { analyzePlan } from "./terraform/planFindings.js";
-import { computeRisk, costFindings } from "./risk/engine.js";
+import { computeRisk } from "./risk/engine.js";
+import { analyzeCost, emptyCostEstimate } from "./cost/estimate.js";
 import { generateAiSummary } from "./ai/summary.js";
 import type { Finding, ReviewResult, ReviewState } from "./types.js";
 
@@ -39,7 +40,12 @@ export async function analyzePullRequest(
   }
 
   findings.push(...analyzePlan(plan));
-  findings.push(...costFindings(plan, config.cost.enabled));
+
+  const { estimate: cost, findings: costFindings } = analyzeCost(plan, {
+    enabled: config.cost.enabled,
+    currency: config.cost.currency,
+  });
+  findings.push(...costFindings);
 
   if (config.scanners.checkov) findings.push(...runCheckov(cwd, true));
   if (config.scanners.tflint) findings.push(...runTfLint(cwd, true));
@@ -56,6 +62,7 @@ export async function analyzePullRequest(
     findings: reconciled,
     plan,
     risk,
+    cost: config.cost.enabled ? cost : emptyCostEstimate(config.cost.currency),
     previousState,
     commitSha,
     aiSummary,
@@ -70,7 +77,6 @@ function dedupeByFingerprint(findings: Finding[]): Finding[] {
       map.set(f.fingerprint, f);
       continue;
     }
-    // Prefer higher severity / richer location
     const order = ["info", "low", "medium", "high", "critical"];
     if (order.indexOf(f.severity) > order.indexOf(existing.severity)) {
       map.set(f.fingerprint, f);

@@ -53,6 +53,23 @@ export interface RiskResult {
   factors: string[];
 }
 
+export interface CostEstimate {
+  enabled: boolean;
+  currency: string;
+  monthlyDeltaUsd: number;
+  monthlyBeforeUsd: number;
+  monthlyAfterUsd: number;
+  items: Array<{
+    address: string;
+    type: string;
+    action: string;
+    detail: string;
+    monthlyDeltaUsd: number;
+    confidence: "estimated" | "qualitative";
+  }>;
+  disclaimer: string;
+}
+
 export interface ReviewState {
   version: 1;
   lastCommitSha: string;
@@ -73,6 +90,7 @@ export interface ReviewResult {
   findings: Finding[];
   plan: PlanSummary;
   risk: RiskResult;
+  cost: CostEstimate;
   previousState?: ReviewState;
   commitSha: string;
   aiSummary?: string;

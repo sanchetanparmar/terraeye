@@ -133,5 +133,21 @@ describe("end-to-end analyze", () => {
     expect(md).toContain("Terraform AI Review");
     expect(md).toContain("SUMMARY");
     expect(md).toContain("SECURITY");
+    expect(md).toContain("COST");
+    expect(result.cost.enabled).toBe(true);
+    // db.t3.medium → db.r6g.large should produce a positive monthly delta
+    expect(result.cost.monthlyDeltaUsd).toBeGreaterThan(0);
+  });
+});
+
+describe("cost estimator", () => {
+  it("estimates RDS resize delta", async () => {
+    const { analyzeCost } = await import("../src/cost/estimate.js");
+    const plan = parsePlanJson(readFileSync(resolve(fixtures, "plan.json"), "utf8"));
+    const { estimate, findings } = analyzeCost(plan, { enabled: true });
+    expect(estimate.monthlyDeltaUsd).toBeGreaterThan(50);
+    expect(findings.some((f) => f.ruleId === "COST_INCREASE" || f.ruleId === "COST_TOTAL_DELTA")).toBe(
+      true
+    );
   });
 });

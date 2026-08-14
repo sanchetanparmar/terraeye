@@ -1,6 +1,4 @@
 import type { Finding, PlanSummary, RiskResult } from "../types.js";
-import { estimateCostSignals } from "../terraform/plan.js";
-import { createFinding } from "../findings/tracker.js";
 
 const SEVERITY_WEIGHT: Record<string, number> = {
   critical: 25,
@@ -32,6 +30,11 @@ export function computeRisk(findings: Finding[], plan: PlanSummary): RiskResult 
   if (criticals) factors.push(`${criticals} critical finding(s)`);
   if (highs) factors.push(`${highs} high finding(s)`);
 
+  const costHigh = active.filter(
+    (f) => f.category === "cost" && (f.severity === "high" || f.severity === "medium")
+  ).length;
+  if (costHigh) factors.push(`${costHigh} material cost finding(s)`);
+
   score = Math.min(100, Math.round(score));
 
   let level: RiskResult["level"] = "low";
@@ -47,20 +50,4 @@ export function computeRisk(findings: Finding[], plan: PlanSummary): RiskResult 
   const securityScore = Math.max(0, 100 - Math.min(100, securityPenalty * 2));
 
   return { score, level, securityScore, factors };
-}
-
-export function costFindings(plan: PlanSummary, enabled: boolean): Finding[] {
-  if (!enabled) return [];
-  return estimateCostSignals(plan).map((signal) =>
-    createFinding({
-      ruleId: "COST_SIGNAL",
-      severity: "medium",
-      category: "cost",
-      title: "Potential cost impact",
-      message: signal,
-      recommendation:
-        "Validate instance sizing against traffic/performance needs. Consider reserved/savings plans for steady workloads.",
-      resource: signal.match(/\(([^)]+)\)/)?.[1],
-    })
-  );
 }
