@@ -1,5 +1,4 @@
 node_modules/
-dist/
 coverage/
 *.log
 .env
@@ -9,3 +8,8 @@ coverage/
 tfplan
 tfplan.json
 .terraeye-state.json
+
+# Keep the GitHub Action bundle committed so `uses: org/terraeye@v1` works.
+# Ignore other build artifacts.
+dist/cli.js
+dist/*.map
