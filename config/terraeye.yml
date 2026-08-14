@@ -1,0 +1,40 @@
+# TerraEye configuration
+# https://github.com/your-org/terraeye
+
+fail_on:
+  - critical
+  - high
+
+paths:
+  - "**/*.tf"
+  - "**/*.tfvars"
+  - "**/terraform/**"
+
+ignore_paths:
+  - "**/.terraform/**"
+  - "**/vendor/**"
+
+inline_comments:
+  enabled: true
+  min_severity: high
+
+ai:
+  enabled: true
+  provider: openai # openai | anthropic | none
+  model: gpt-4o-mini
+
+cost:
+  enabled: true
+
+scanners:
+  builtin: true
+  checkov: false
+  tflint: false
+  trivy: false
+
+comment:
+  marker: "<!-- terraeye-review -->"
+  collapse_details: true
+
+check:
+  name: Terraform AI Review

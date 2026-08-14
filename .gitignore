@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.DS_Store
+.terraform/
+*.tfstate*
+tfplan
+tfplan.json
+.terraeye-state.json

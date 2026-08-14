@@ -1,0 +1,44 @@
+name: TerraEye
+description: AI-powered PR reviewer for Terraform and AWS infrastructure
+author: TerraEye
+branding:
+  icon: eye
+  color: green
+
+inputs:
+  github-token:
+    description: GitHub token with pull request read/write and checks permissions
+    required: false
+    default: ${{ github.token }}
+  config-path:
+    description: Path to terraeye.yml
+    required: false
+    default: terraeye.yml
+  working-directory:
+    description: Directory containing Terraform root
+    required: false
+    default: .
+  plan-file:
+    description: Path to terraform show -json output
+    required: false
+  fail-on:
+    description: Comma-separated severities that fail the check, or "none"
+    required: false
+
+outputs:
+  risk-score:
+    description: Overall risk score 0-100
+  security-score:
+    description: Security score 0-100
+  risk-level:
+    description: low|medium|high|critical
+  conclusion:
+    description: success|failure|neutral
+  findings-critical:
+    description: Count of critical findings
+  findings-high:
+    description: Count of high findings
+
+runs:
+  using: node20
+  main: dist/index.js

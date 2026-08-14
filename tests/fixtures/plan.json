@@ -1,0 +1,45 @@
+{
+  "format_version": "1.2",
+  "resource_changes": [
+    {
+      "address": "aws_db_instance.production",
+      "type": "aws_db_instance",
+      "name": "production",
+      "change": {
+        "actions": ["delete", "create"],
+        "before": { "instance_class": "db.t3.medium" },
+        "after": { "instance_class": "db.r6g.large", "publicly_accessible": true },
+        "replace_paths": [["instance_class"]]
+      }
+    },
+    {
+      "address": "aws_security_group.app",
+      "type": "aws_security_group",
+      "name": "app",
+      "change": {
+        "actions": ["update"],
+        "before": {},
+        "after": {
+          "ingress": [
+            {
+              "from_port": 22,
+              "to_port": 22,
+              "protocol": "tcp",
+              "cidr_blocks": ["0.0.0.0/0"]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "address": "aws_instance.web",
+      "type": "aws_instance",
+      "name": "web",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": { "instance_type": "t3.micro" }
+      }
+    }
+  ]
+}

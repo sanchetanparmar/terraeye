@@ -1,0 +1,68 @@
+name: TerraEye Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - "**/*.tf"
+      - "**/*.tfvars"
+      - "**/*.tf.json"
+      - "**/terraform/**"
+      - "terraeye.yml"
+      - ".github/workflows/terraeye.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  terraeye:
+    name: Terraform AI Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      # Optional: generate a plan for richer reviews
+      # - name: Terraform Init
+      #   working-directory: terraform
+      #   run: terraform init -input=false
+      #
+      # - name: Terraform Plan
+      #   working-directory: terraform
+      #   run: |
+      #     terraform plan -input=false -out=tfplan
+      #     terraform show -json tfplan > tfplan.json
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install TerraEye
+        run: npm ci && npm run build:action
+
+      - name: Run TerraEye
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          config-path: config/terraeye.yml
+          # plan-file: terraform/tfplan.json
+          fail-on: critical,high
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
