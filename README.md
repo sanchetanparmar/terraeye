@@ -89,6 +89,28 @@ Consumers pin a tag (`@v0.1.0`) or a major moving tag (`@v1`).
     plan-file: infra/tfplan.json
 ```
 
+## Optional cost analysis
+
+Cost estimation is **on by default** (`cost.enabled: true`).
+
+It reads your Terraform plan and estimates monthly delta for common AWS resources (EC2, RDS, NAT, ALB, EKS nodes, etc.).
+
+```yaml
+cost:
+  enabled: true
+  currency: USD
+```
+
+Requires `plan-file` for meaningful numbers:
+
+```yaml
+- uses: sanchetanparmar/terraeye@v0.1.0
+  with:
+    plan-file: infra/tfplan.json
+```
+
+Estimates are approximate on-demand list prices — not a billing quote.
+
 ## Configuration (`terraeye.yml`)
 
 ```yaml

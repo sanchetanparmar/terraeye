@@ -75,7 +75,7 @@ export function loadPlanFile(path?: string): PlanSummary {
   return parsePlanJson(readFileSync(path, "utf8"));
 }
 
-/** Heuristic cost signals from plan resource changes (not live pricing). */
+/** Heuristic helpers kept for backward compatibility — prefer src/cost/estimate.ts */
 export function estimateCostSignals(plan: PlanSummary): string[] {
   const signals: string[] = [];
   for (const r of plan.resources) {
@@ -92,12 +92,6 @@ export function estimateCostSignals(plan: PlanSummary): string[] {
       if (before && after && before !== after) {
         signals.push(`EC2 instance type change: ${before} → ${after} (${r.address})`);
       }
-    }
-    if (
-      (r.type === "aws_eks_node_group" || r.type === "aws_autoscaling_group") &&
-      (r.action === "create" || r.action === "update")
-    ) {
-      signals.push(`Scaling-related change on ${r.address} may increase compute spend`);
     }
   }
   return signals;

@@ -94,6 +94,11 @@ export function formatSummaryComment(
     `Risk Score: ${risk.score}/100`,
     `Risk Level: ${RISK_EMOJI[risk.level]} ${risk.level.toUpperCase()}`,
     `Security Score: ${risk.securityScore}/100`,
+    result.cost.enabled && Math.abs(result.cost.monthlyDeltaUsd) >= 1
+      ? `Cost delta (est.): ${result.cost.monthlyDeltaUsd > 0 ? "+" : ""}$${result.cost.monthlyDeltaUsd.toFixed(0)}/month`
+      : result.cost.enabled
+        ? "Cost delta (est.): ~$0/month (or needs plan JSON)"
+        : null,
     "",
     `Findings: 🔴 ${counts.critical} critical · 🟠 ${counts.high} high · 🟡 ${counts.medium} medium · 🔵 ${counts.low} low · ℹ️ ${counts.info} info`,
     resolved.length ? `Resolved this run: ${resolved.length}` : null,
@@ -181,10 +186,15 @@ export function formatCheckSummary(result: ReviewResult): string {
     "",
     `Security Score: ${result.risk.securityScore}/100`,
     `Risk Score:     ${result.risk.score}/100`,
+    result.cost.enabled
+      ? `Cost delta:      ${result.cost.monthlyDeltaUsd > 0 ? "+" : ""}$${result.cost.monthlyDeltaUsd.toFixed(0)}/mo`
+      : null,
     "",
     "Terraform Plan:",
     `+${result.plan.add}  ~${result.plan.change}  -${result.plan.destroy}`,
-  ].join("\n");
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
 }
 
 export function formatCheckTitle(result: ReviewResult): string {

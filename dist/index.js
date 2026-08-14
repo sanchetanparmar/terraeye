@@ -3926,9 +3926,9 @@ var require_util2 = __commonJS({
       }
       const strongest = getStrongestMetadata(parsedMetadata);
       const metadata = filterMetadataListByAlgorithm(parsedMetadata, strongest);
-      for (const item of metadata) {
-        const algorithm = item.algo;
-        const expectedValue = item.hash;
+      for (const item2 of metadata) {
+        const algorithm = item2.algo;
+        const expectedValue = item2.hash;
         let actualValue = crypto.createHash(algorithm).update(bytes).digest("base64");
         if (actualValue[actualValue.length - 1] === "=") {
           if (actualValue[actualValue.length - 2] === "=") {
@@ -8689,12 +8689,12 @@ var require_pool_base = __commonJS({
           const queue = pool[kQueue];
           let needDrain = false;
           while (!needDrain) {
-            const item = queue.shift();
-            if (!item) {
+            const item2 = queue.shift();
+            if (!item2) {
               break;
             }
             pool[kQueued]--;
-            needDrain = !this.dispatch(item.opts, item.handler);
+            needDrain = !this.dispatch(item2.opts, item2.handler);
           }
           this[kNeedDrain] = needDrain;
           if (!this[kNeedDrain] && pool[kNeedDrain]) {
@@ -8760,11 +8760,11 @@ var require_pool_base = __commonJS({
       }
       async [kDestroy](err) {
         while (true) {
-          const item = this[kQueue].shift();
-          if (!item) {
+          const item2 = this[kQueue].shift();
+          if (!item2) {
             break;
           }
-          item.handler.onError(err);
+          item2.handler.onError(err);
         }
         return Promise.all(this[kClients].map((c) => c.destroy(err)));
       }
@@ -18285,7 +18285,7 @@ var require_summary = __commonJS({
        */
       addList(items, ordered = false) {
         const tag = ordered ? "ol" : "ul";
-        const listItems = items.map((item) => this.wrap("li", item)).join("");
+        const listItems = items.map((item2) => this.wrap("li", item2)).join("");
         const element = this.wrap(tag, listItems);
         return this.addRaw(element).addEOL();
       }
@@ -27073,8 +27073,8 @@ var util;
   util2.assertNever = assertNever;
   util2.arrayToEnum = (items) => {
     const obj = {};
-    for (const item of items) {
-      obj[item] = item;
+    for (const item2 of items) {
+      obj[item2] = item2;
     }
     return obj;
   };
@@ -27101,9 +27101,9 @@ var util;
     return keys;
   };
   util2.find = (arr, checker) => {
-    for (const item of arr) {
-      if (checker(item))
-        return item;
+    for (const item2 of arr) {
+      if (checker(item2))
+        return item2;
     }
     return void 0;
   };
@@ -29243,14 +29243,14 @@ var ZodArray = class _ZodArray extends ZodType {
       }
     }
     if (ctx.common.async) {
-      return Promise.all([...ctx.data].map((item, i) => {
-        return def.type._parseAsync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+      return Promise.all([...ctx.data].map((item2, i) => {
+        return def.type._parseAsync(new ParseInputLazyPath(ctx, item2, ctx.path, i));
       })).then((result2) => {
         return ParseStatus.mergeArray(status, result2);
       });
     }
-    const result = [...ctx.data].map((item, i) => {
-      return def.type._parseSync(new ParseInputLazyPath(ctx, item, ctx.path, i));
+    const result = [...ctx.data].map((item2, i) => {
+      return def.type._parseSync(new ParseInputLazyPath(ctx, item2, ctx.path, i));
     });
     return ParseStatus.mergeArray(status, result);
   }
@@ -29310,7 +29310,7 @@ function deepPartialify(schema2) {
   } else if (schema2 instanceof ZodNullable) {
     return ZodNullable.create(deepPartialify(schema2.unwrap()));
   } else if (schema2 instanceof ZodTuple) {
-    return ZodTuple.create(schema2.items.map((item) => deepPartialify(item)));
+    return ZodTuple.create(schema2.items.map((item2) => deepPartialify(item2)));
   } else {
     return schema2;
   }
@@ -29974,11 +29974,11 @@ var ZodTuple = class _ZodTuple extends ZodType {
       });
       status.dirty();
     }
-    const items = [...ctx.data].map((item, itemIndex) => {
+    const items = [...ctx.data].map((item2, itemIndex) => {
       const schema2 = this._def.items[itemIndex] || this._def.rest;
       if (!schema2)
         return null;
-      return schema2._parse(new ParseInputLazyPath(ctx, item, ctx.path, itemIndex));
+      return schema2._parse(new ParseInputLazyPath(ctx, item2, ctx.path, itemIndex));
     }).filter((x) => !!x);
     if (ctx.common.async) {
       return Promise.all(items).then((results) => {
@@ -30178,7 +30178,7 @@ var ZodSet = class _ZodSet extends ZodType {
       }
       return { status: status.value, value: parsedSet };
     }
-    const elements = [...ctx.data.values()].map((item, i) => valueType._parse(new ParseInputLazyPath(ctx, item, ctx.path, i)));
+    const elements = [...ctx.data.values()].map((item2, i) => valueType._parse(new ParseInputLazyPath(ctx, item2, ctx.path, i)));
     if (ctx.common.async) {
       return Promise.all(elements).then((elements2) => finalizeSet(elements2));
     } else {
@@ -33500,29 +33500,6 @@ function loadPlanFile(path2) {
   if (!path2 || !(0, import_node_fs3.existsSync)(path2)) return emptyPlan();
   return parsePlanJson((0, import_node_fs3.readFileSync)(path2, "utf8"));
 }
-function estimateCostSignals(plan) {
-  const signals = [];
-  for (const r of plan.resources) {
-    if (r.type === "aws_db_instance" && (r.action === "update" || r.action === "replace")) {
-      const before = String(r.before?.instance_class ?? "");
-      const after = String(r.after?.instance_class ?? "");
-      if (before && after && before !== after) {
-        signals.push(`RDS instance size change: ${before} \u2192 ${after} (${r.address})`);
-      }
-    }
-    if (r.type === "aws_instance" && (r.action === "update" || r.action === "replace")) {
-      const before = String(r.before?.instance_type ?? "");
-      const after = String(r.after?.instance_type ?? "");
-      if (before && after && before !== after) {
-        signals.push(`EC2 instance type change: ${before} \u2192 ${after} (${r.address})`);
-      }
-    }
-    if ((r.type === "aws_eks_node_group" || r.type === "aws_autoscaling_group") && (r.action === "create" || r.action === "update")) {
-      signals.push(`Scaling-related change on ${r.address} may increase compute spend`);
-    }
-  }
-  return signals;
-}
 
 // src/terraform/planFindings.ts
 function analyzePlan(plan) {
@@ -33634,6 +33611,10 @@ function computeRisk(findings, plan) {
   const highs = active.filter((f) => f.severity === "high").length;
   if (criticals) factors.push(`${criticals} critical finding(s)`);
   if (highs) factors.push(`${highs} high finding(s)`);
+  const costHigh = active.filter(
+    (f) => f.category === "cost" && (f.severity === "high" || f.severity === "medium")
+  ).length;
+  if (costHigh) factors.push(`${costHigh} material cost finding(s)`);
   score = Math.min(100, Math.round(score));
   let level = "low";
   if (score >= 80 || criticals > 0) level = "critical";
@@ -33647,19 +33628,310 @@ function computeRisk(findings, plan) {
   const securityScore = Math.max(0, 100 - Math.min(100, securityPenalty * 2));
   return { score, level, securityScore, factors };
 }
-function costFindings(plan, enabled) {
-  if (!enabled) return [];
-  return estimateCostSignals(plan).map(
-    (signal) => createFinding({
-      ruleId: "COST_SIGNAL",
-      severity: "medium",
-      category: "cost",
-      title: "Potential cost impact",
-      message: signal,
-      recommendation: "Validate instance sizing against traffic/performance needs. Consider reserved/savings plans for steady workloads.",
-      resource: signal.match(/\(([^)]+)\)/)?.[1]
-    })
-  );
+
+// src/cost/estimate.ts
+var EC2_MONTHLY = {
+  "t2.micro": 8,
+  "t2.small": 17,
+  "t2.medium": 34,
+  "t3.micro": 8,
+  "t3.small": 15,
+  "t3.medium": 30,
+  "t3.large": 60,
+  "t3.xlarge": 121,
+  "t3.2xlarge": 242,
+  "t3a.medium": 27,
+  "t3a.large": 54,
+  "m5.large": 70,
+  "m5.xlarge": 140,
+  "m5.2xlarge": 280,
+  "m6i.large": 70,
+  "m6i.xlarge": 140,
+  "c5.large": 62,
+  "c5.xlarge": 124,
+  "c6i.large": 62,
+  "r5.large": 92,
+  "r5.xlarge": 184,
+  "r6g.large": 74,
+  "r6g.xlarge": 148,
+  "r6i.large": 92
+};
+var RDS_MONTHLY = {
+  "db.t3.micro": 15,
+  "db.t3.small": 29,
+  "db.t3.medium": 58,
+  "db.t3.large": 117,
+  "db.t4g.micro": 12,
+  "db.t4g.small": 24,
+  "db.t4g.medium": 48,
+  "db.m5.large": 125,
+  "db.m5.xlarge": 250,
+  "db.m6g.large": 105,
+  "db.r5.large": 175,
+  "db.r5.xlarge": 350,
+  "db.r6g.large": 148,
+  "db.r6g.xlarge": 296,
+  "db.r6i.large": 175
+};
+var FIXED_MONTHLY = {
+  aws_nat_gateway: 32,
+  aws_eip: 4,
+  aws_lb: 22,
+  aws_alb: 22,
+  aws_lb_listener: 0,
+  aws_elb: 18,
+  aws_efs_file_system: 6,
+  aws_opensearch_domain: 80,
+  aws_elasticsearch_domain: 80,
+  aws_msk_cluster: 150,
+  aws_eks_cluster: 73,
+  aws_ecs_cluster: 0,
+  aws_redshift_cluster: 200,
+  aws_elasticache_replication_group: 50,
+  aws_elasticache_cluster: 25,
+  aws_vpn_gateway: 36,
+  aws_customer_gateway: 0,
+  aws_cloudfront_distribution: 10
+};
+function emptyCostEstimate(currency = "USD") {
+  return {
+    enabled: false,
+    currency,
+    monthlyDeltaUsd: 0,
+    monthlyBeforeUsd: 0,
+    monthlyAfterUsd: 0,
+    items: [],
+    disclaimer: "Estimates are approximate on-demand list prices (us-east-1 style) and exclude data transfer, storage growth, and discounts."
+  };
+}
+function analyzeCost(plan, options) {
+  const currency = options.currency ?? "USD";
+  if (!options.enabled) {
+    return { estimate: emptyCostEstimate(currency), findings: [] };
+  }
+  const estimate = emptyCostEstimate(currency);
+  estimate.enabled = true;
+  if (!plan.rawAvailable) {
+    estimate.items.push({
+      address: "(no plan)",
+      type: "meta",
+      action: "info",
+      detail: "No Terraform plan JSON provided \u2014 cost delta requires `plan-file` / `terraform show -json`.",
+      monthlyDeltaUsd: 0,
+      confidence: "qualitative"
+    });
+    return {
+      estimate,
+      findings: [
+        createFinding({
+          ruleId: "COST_NO_PLAN",
+          severity: "info",
+          category: "cost",
+          title: "Cost estimate unavailable",
+          message: "Pass a Terraform plan JSON to estimate monthly cost impact of creates/resizes/destroys.",
+          recommendation: "Add `terraform show -json tfplan > tfplan.json` and set `plan-file` on the Action."
+        })
+      ]
+    };
+  }
+  for (const r of plan.resources) {
+    const items = lineItemsForResource(r);
+    for (const item2 of items) {
+      estimate.items.push(item2);
+      if (item2.confidence === "estimated") {
+        estimate.monthlyDeltaUsd += item2.monthlyDeltaUsd;
+        if (item2.monthlyDeltaUsd > 0) estimate.monthlyAfterUsd += item2.monthlyDeltaUsd;
+        if (item2.monthlyDeltaUsd < 0) estimate.monthlyBeforeUsd += Math.abs(item2.monthlyDeltaUsd);
+      }
+    }
+  }
+  estimate.monthlyDeltaUsd = round2(estimate.monthlyDeltaUsd);
+  estimate.monthlyBeforeUsd = round2(estimate.monthlyBeforeUsd);
+  estimate.monthlyAfterUsd = round2(estimate.monthlyAfterUsd);
+  return { estimate, findings: findingsFromEstimate(estimate) };
+}
+function lineItemsForResource(r) {
+  const items = [];
+  if (r.type === "aws_instance") {
+    const before = priceEc2(String(r.before?.instance_type ?? ""));
+    const after = priceEc2(String(r.after?.instance_type ?? ""));
+    if (r.action === "create" && after != null) {
+      items.push(item(r, `New EC2 ${r.after?.instance_type}`, after));
+    } else if (r.action === "delete" && before != null) {
+      items.push(item(r, `Remove EC2 ${r.before?.instance_type}`, -before));
+    } else if ((r.action === "update" || r.action === "replace") && before != null && after != null) {
+      const delta = after - before;
+      if (delta !== 0) {
+        items.push(
+          item(
+            r,
+            `EC2 type ${r.before?.instance_type} \u2192 ${r.after?.instance_type}`,
+            delta
+          )
+        );
+      }
+    }
+    return items;
+  }
+  if (r.type === "aws_db_instance") {
+    const before = priceRds(String(r.before?.instance_class ?? ""));
+    const after = priceRds(String(r.after?.instance_class ?? ""));
+    const storageBefore = Number(r.before?.allocated_storage ?? 0) * 0.115;
+    const storageAfter = Number(r.after?.allocated_storage ?? 0) * 0.115;
+    if (r.action === "create" && after != null) {
+      items.push(
+        item(r, `New RDS ${r.after?.instance_class}`, after + (storageAfter || 0))
+      );
+    } else if (r.action === "delete" && before != null) {
+      items.push(item(r, `Remove RDS ${r.before?.instance_class}`, -(before + storageBefore)));
+    } else if ((r.action === "update" || r.action === "replace") && (before != null || after != null)) {
+      const b = (before ?? 0) + storageBefore;
+      const a = (after ?? 0) + storageAfter;
+      const delta = a - b;
+      if (Math.abs(delta) >= 1) {
+        items.push(
+          item(
+            r,
+            `RDS ${r.before?.instance_class ?? "?"} \u2192 ${r.after?.instance_class ?? "?"} (incl. storage heuristic)`,
+            delta
+          )
+        );
+      }
+    }
+    return items;
+  }
+  if (r.type === "aws_eks_node_group" || r.type === "aws_autoscaling_group") {
+    const beforeDesired = Number(
+      r.before?.desired_size ?? r.before?.desired_capacity ?? r.before?.min_size ?? 0
+    );
+    const afterDesired = Number(
+      r.after?.desired_size ?? r.after?.desired_capacity ?? r.after?.min_size ?? 0
+    );
+    const instanceType = String(
+      r.after?.instance_types?.[0] ?? r.after?.instance_type ?? r.before?.instance_types?.[0] ?? "m5.large"
+    );
+    const unit = priceEc2(instanceType) ?? 70;
+    if (r.action === "create") {
+      const n = afterDesired || 1;
+      items.push(item(r, `New ${r.type} (~${n}\xD7 ${instanceType})`, unit * n));
+    } else if (r.action === "delete") {
+      const n = beforeDesired || 1;
+      items.push(item(r, `Remove ${r.type}`, -unit * n));
+    } else if (afterDesired !== beforeDesired) {
+      items.push(
+        item(
+          r,
+          `Scale ${beforeDesired} \u2192 ${afterDesired} (${instanceType})`,
+          (afterDesired - beforeDesired) * unit
+        )
+      );
+    }
+    return items;
+  }
+  const fixed = FIXED_MONTHLY[r.type];
+  if (fixed != null && fixed > 0) {
+    if (r.action === "create" || r.action === "replace") {
+      items.push(item(r, `New ${r.type}`, fixed));
+    } else if (r.action === "delete") {
+      items.push(item(r, `Remove ${r.type}`, -fixed));
+    }
+    return items;
+  }
+  if ((r.action === "create" || r.action === "replace") && /aws_(rds_|db_|redshift_|msk_|opensearch_|nat_|eks_|elasticache_)/.test(r.type)) {
+    items.push({
+      address: r.address,
+      type: r.type,
+      action: r.action,
+      detail: `Potentially costly resource created: ${r.type}`,
+      monthlyDeltaUsd: 0,
+      confidence: "qualitative"
+    });
+  }
+  return items;
+}
+function findingsFromEstimate(estimate) {
+  const findings = [];
+  const priced = estimate.items.filter((i) => i.confidence === "estimated" && i.monthlyDeltaUsd !== 0);
+  for (const i of priced) {
+    findings.push(
+      createFinding({
+        ruleId: i.monthlyDeltaUsd > 0 ? "COST_INCREASE" : "COST_DECREASE",
+        severity: severityForDelta(i.monthlyDeltaUsd),
+        category: "cost",
+        title: i.monthlyDeltaUsd > 0 ? `Estimated cost increase: ${fmtMoney(i.monthlyDeltaUsd, estimate.currency)}/month` : `Estimated cost decrease: ${fmtMoney(Math.abs(i.monthlyDeltaUsd), estimate.currency)}/month`,
+        message: `${i.detail}
+
+Estimated monthly delta: **${fmtMoney(i.monthlyDeltaUsd, estimate.currency)}/month**`,
+        recommendation: i.monthlyDeltaUsd > 0 ? "Confirm sizing is required. Consider Savings Plans / Reserved Instances for steady workloads, or right-size after load testing." : "Verify the downsize still meets performance and HA requirements.",
+        resource: i.address
+      })
+    );
+  }
+  for (const i of estimate.items.filter((x) => x.confidence === "qualitative" && x.address !== "(no plan)")) {
+    findings.push(
+      createFinding({
+        ruleId: "COST_QUALITATIVE",
+        severity: "low",
+        category: "cost",
+        title: "Potential cost impact",
+        message: i.detail,
+        recommendation: "Review AWS pricing for this resource family before merge.",
+        resource: i.address
+      })
+    );
+  }
+  if (Math.abs(estimate.monthlyDeltaUsd) >= 1) {
+    findings.unshift(
+      createFinding({
+        ruleId: "COST_TOTAL_DELTA",
+        severity: severityForDelta(estimate.monthlyDeltaUsd),
+        category: "cost",
+        title: `Net estimated monthly delta: ${fmtMoney(estimate.monthlyDeltaUsd, estimate.currency)}`,
+        message: [
+          `Approximate net change: **${fmtMoney(estimate.monthlyDeltaUsd, estimate.currency)}/month**`,
+          "",
+          estimate.disclaimer
+        ].join("\n"),
+        recommendation: "Treat as a directional estimate only. Validate with AWS Cost Explorer / Infracost for production budgets."
+      })
+    );
+  }
+  return findings;
+}
+function item(r, detail, monthlyDeltaUsd) {
+  return {
+    address: r.address,
+    type: r.type,
+    action: r.action,
+    detail,
+    monthlyDeltaUsd: round2(monthlyDeltaUsd),
+    confidence: "estimated"
+  };
+}
+function priceEc2(type2) {
+  if (!type2) return null;
+  return EC2_MONTHLY[type2] ?? null;
+}
+function priceRds(cls) {
+  if (!cls) return null;
+  return RDS_MONTHLY[cls] ?? null;
+}
+function severityForDelta(delta) {
+  const abs = Math.abs(delta);
+  if (delta <= -50) return "info";
+  if (delta >= 200) return "high";
+  if (delta >= 50) return "medium";
+  if (abs >= 10) return "low";
+  return "info";
+}
+function fmtMoney(amount, currency = "USD") {
+  const sign = amount > 0 ? "+" : amount < 0 ? "-" : "";
+  const abs = Math.abs(amount);
+  if (currency === "USD") return `${sign}$${abs.toFixed(0)}`;
+  return `${sign}${abs.toFixed(0)} ${currency}`;
+}
+function round2(n) {
+  return Math.round(n * 100) / 100;
 }
 
 // src/ai/summary.ts
@@ -33778,7 +34050,11 @@ async function analyzePullRequest(options) {
     );
   }
   findings.push(...analyzePlan(plan));
-  findings.push(...costFindings(plan, config.cost.enabled));
+  const { estimate: cost, findings: costFindings } = analyzeCost(plan, {
+    enabled: config.cost.enabled,
+    currency: config.cost.currency
+  });
+  findings.push(...costFindings);
   if (config.scanners.checkov) findings.push(...runCheckov(cwd, true));
   if (config.scanners.tflint) findings.push(...runTfLint(cwd, true));
   if (config.scanners.trivy) findings.push(...runTrivy(cwd, true));
@@ -33792,6 +34068,7 @@ async function analyzePullRequest(options) {
     findings: reconciled,
     plan,
     risk,
+    cost: config.cost.enabled ? cost : emptyCostEstimate(config.cost.currency),
     previousState,
     commitSha,
     aiSummary
@@ -33905,6 +34182,7 @@ ${details}
     `Risk Score: ${risk.score}/100`,
     `Risk Level: ${RISK_EMOJI[risk.level]} ${risk.level.toUpperCase()}`,
     `Security Score: ${risk.securityScore}/100`,
+    result.cost.enabled && Math.abs(result.cost.monthlyDeltaUsd) >= 1 ? `Cost delta (est.): ${result.cost.monthlyDeltaUsd > 0 ? "+" : ""}$${result.cost.monthlyDeltaUsd.toFixed(0)}/month` : result.cost.enabled ? "Cost delta (est.): ~$0/month (or needs plan JSON)" : null,
     "",
     `Findings: \u{1F534} ${counts.critical} critical \xB7 \u{1F7E0} ${counts.high} high \xB7 \u{1F7E1} ${counts.medium} medium \xB7 \u{1F535} ${counts.low} low \xB7 \u2139\uFE0F ${counts.info} info`,
     resolved.length ? `Resolved this run: ${resolved.length}` : null,
@@ -33982,10 +34260,11 @@ function formatCheckSummary(result) {
     "",
     `Security Score: ${result.risk.securityScore}/100`,
     `Risk Score:     ${result.risk.score}/100`,
+    result.cost.enabled ? `Cost delta:      ${result.cost.monthlyDeltaUsd > 0 ? "+" : ""}$${result.cost.monthlyDeltaUsd.toFixed(0)}/mo` : null,
     "",
     "Terraform Plan:",
     `+${result.plan.add}  ~${result.plan.change}  -${result.plan.destroy}`
-  ].join("\n");
+  ].filter((l) => l !== null).join("\n");
 }
 function formatCheckTitle(result) {
   const counts = countBySeverity(result.findings);
