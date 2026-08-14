@@ -17,12 +17,13 @@ inline_comments:
 
 ai:
   enabled: true
-  provider: openai
-  model: gpt-4o-mini
+  provider: anthropic # openai | anthropic | none
+  model: claude-haiku-4-5
+  # model: gpt-4o-mini
 
-# cost:
-#   enabled: true
-#   currency: USD
+cost:
+  enabled: true
+  currency: USD
 
 # scanners:
 #   builtin: true
