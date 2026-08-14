@@ -2,7 +2,7 @@
 resource "aws_security_group" "app" {
   name        = "app"
   description = "App SG"
-  vpc_id      = "vpc-124"
+  vpc_id      = "vpc-125"
 
   ingress {
     from_port   = 22
