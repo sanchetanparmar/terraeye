@@ -1,38 +1,38 @@
-fail_on:
-  - critical
-  - high
+# fail_on:
+#   - critical
+#   - high
 
-paths:
-  - "**/*.tf"
-  - "**/*.tfvars"
-  - "**/terraform/**"
+# paths:
+#   - "**/*.tf"
+#   - "**/*.tfvars"
+#   - "**/terraform/**"
 
-ignore_paths:
-  - "**/.terraform/**"
-  - "**/vendor/**"
+# ignore_paths:
+#   - "**/.terraform/**"
+#   - "**/vendor/**"
 
-inline_comments:
-  enabled: true
-  min_severity: high
-
-ai:
-  enabled: true
-  provider: anthropic # openai | anthropic | none
-  model: claude-haiku-4-5
-
-# cost:
+# inline_comments:
 #   enabled: true
-#   currency: USD
+#   min_severity: high
 
-# scanners:
-#   builtin: true
-#   checkov: false
-#   tflint: false
-#   trivy: false
+# ai:
+#   enabled: true
+#   provider: anthropic # openai | anthropic | none
+#   model: claude-haiku-4-5
 
-comment:
-  marker: "<!-- terraeye-review -->"
-  collapse_details: true
+# # cost:
+# #   enabled: true
+# #   currency: USD
 
-check:
-  name: Terraform AI Review
+# # scanners:
+# #   builtin: true
+# #   checkov: false
+# #   tflint: false
+# #   trivy: false
+
+# comment:
+#   marker: "<!-- terraeye-review -->"
+#   collapse_details: true
+
+# check:
+#   name: Terraform AI Review
