@@ -1,5 +1,5 @@
 name: TerraEye
-description: AI-powered PR reviewer for Terraform and AWS infrastructure
+description: PR reviewer for Terraform 
 author: TerraEye
 branding:
   icon: eye
