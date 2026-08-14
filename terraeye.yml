@@ -20,15 +20,15 @@ ai:
   provider: openai
   model: gpt-4o-mini
 
-cost:
-  enabled: true
-  currency: USD
+# cost:
+#   enabled: true
+#   currency: USD
 
-scanners:
-  builtin: true
-  checkov: false
-  tflint: false
-  trivy: false
+# scanners:
+#   builtin: true
+#   checkov: false
+#   tflint: false
+#   trivy: false
 
 comment:
   marker: "<!-- terraeye-review -->"
