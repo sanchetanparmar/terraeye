@@ -1,5 +1,8 @@
-# TerraEye configuration
-# https://github.com/your-org/terraeye
+# This is TerraEye CONFIG — not a GitHub Actions workflow.
+# Do NOT put this file in .github/workflows/ (that folder is only for workflows with on:/jobs:).
+# Place this at the repo root as: terraeye.yml
+#
+# yaml-language-server: $schema=https://raw.githubusercontent.com/sanchetanparmar/terraeye/main/schemas/terraeye.schema.json
 
 fail_on:
   - critical
@@ -20,8 +23,8 @@ inline_comments:
 
 ai:
   enabled: true
-  provider: openai # openai | anthropic | none
-  model: gpt-4o-mini
+  provider: anthropic # openai | anthropic | none
+  model: claude-haiku-4-5
 
 cost:
   enabled: true

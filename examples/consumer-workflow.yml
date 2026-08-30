@@ -1,10 +1,7 @@
-# Example workflow for ANY other repository that wants TerraEye reviews.
-# Copy this file to: .github/workflows/terraeye.yml
+# Example workflow — copy to any repo as:
+#   .github/workflows/terraeye.yml
 #
-# Required: this workflow + checkout + uses: sanchetanparmar/terraeye@...
-# Optional: terraeye.yml, plan-file (needed for cost), OPENAI_API_KEY
-#
-# Then open a PR that changes *.tf — TerraEye runs automatically.
+# Defaults only: no terraeye.yml, no Checkov/TFLint install needed.
 
 name: TerraEye
 
@@ -27,33 +24,13 @@ jobs:
     name: Terraform AI Review
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Optional but required for COST + plan create/change/destroy:
-      # - uses: hashicorp/setup-terraform@v3
-      #   with:
-      #     terraform_wrapper: false
-      # - name: Terraform plan
-      #   working-directory: terraform
-      #   run: |
-      #     terraform init -input=false
-      #     terraform plan -input=false -out=tfplan
-      #     terraform show -json tfplan > tfplan.json
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - uses: actions/checkout@v4
 
       - name: TerraEye
         uses: sanchetanparmar/terraeye@v0.1.1
         with:
-          # Optional — defaults to github.token
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Optional — only if you added terraeye.yml to customize defaults
-          # config-path: terraeye.yml
-          # Required for cost estimates (uncomment plan steps above too)
-          # plan-file: terraform/tfplan.json
           fail-on: critical,high
-        env:
-          # Optional — AI recommendation text only
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      # Optional later:
+      # - plan-file: ...          # for cost $/month
+      # - env OPENAI_API_KEY      # for AI recommendation text

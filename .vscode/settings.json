@@ -1,0 +1,20 @@
+{
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/sanchetanparmar/terraeye/main/schemas/terraeye.schema.json": [
+      "/terraeye.yml",
+      "/terraeye.yaml",
+      "terraeye.yml",
+      "terraeye.yaml",
+      "config/terraeye.yml",
+      "config/terraeye.yaml",
+      ".terraeye.yml",
+      ".terraeye.yaml"
+    ]
+  },
+  "files.associations": {
+    "**/terraeye.yml": "yaml",
+    "**/terraeye.yaml": "yaml",
+    "**/.terraeye.yml": "yaml",
+    "**/config/terraeye.yml": "yaml"
+  }
+}
