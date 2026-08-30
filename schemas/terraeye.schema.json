@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/sanchetanparmar/terraeye/schemas/terraeye.schema.json",
+  "title": "TerraEye config",
+  "description": "Configuration for TerraEye Terraform PR reviewer. This is NOT a GitHub Actions workflow.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "fail_on": {
+      "oneOf": [
+        { "const": "none" },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"]
+          }
+        }
+      ]
+    },
+    "paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ignore_paths": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "plan_file": { "type": "string" },
+    "inline_comments": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "min_severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low", "info"]
+        }
+      }
+    },
+    "ai": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "provider": { "type": "string", "enum": ["openai", "anthropic", "none"] },
+        "model": { "type": "string" }
+      }
+    },
+    "cost": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "currency": { "type": "string" }
+      }
+    },
+    "scanners": {
+      "type": "object",
+      "properties": {
+        "builtin": { "type": "boolean" },
+        "checkov": { "type": "boolean" },
+        "tflint": { "type": "boolean" },
+        "trivy": { "type": "boolean" }
+      }
+    },
+    "comment": {
+      "type": "object",
+      "properties": {
+        "marker": { "type": "string" },
+        "collapse_details": { "type": "boolean" }
+      }
+    },
+    "check": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" }
+      }
+    }
+  }
+}

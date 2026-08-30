@@ -1,3 +1,7 @@
+# This is TerraEye CONFIG — not a GitHub Actions workflow.
+# Do NOT put this file in .github/workflows/
+# yaml-language-server: $schema=https://raw.githubusercontent.com/sanchetanparmar/terraeye/main/schemas/terraeye.schema.json
+
 fail_on:
   - critical
   - high

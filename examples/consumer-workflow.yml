@@ -1,7 +1,7 @@
-# Example workflow for ANY other repository that wants TerraEye reviews.
-# Copy this file to: .github/workflows/terraeye.yml
+# Example workflow — copy to any repo as:
+#   .github/workflows/terraeye.yml
 #
-# Then open a PR that changes *.tf — TerraEye runs automatically.
+# Defaults only: no terraeye.yml, no Checkov/TFLint install needed.
 
 name: TerraEye
 
@@ -24,26 +24,13 @@ jobs:
     name: Terraform AI Review
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Optional: produce a plan for richer reviews
-      # - uses: hashicorp/setup-terraform@v3
-      #   with:
-      #     terraform_wrapper: false
-      # - name: Terraform plan
-      #   working-directory: terraform
-      #   run: |
-      #     terraform init -input=false
-      #     terraform plan -input=false -out=tfplan
-      #     terraform show -json tfplan > tfplan.json
+      - uses: actions/checkout@v4
 
       - name: TerraEye
-        uses: sanchetanparmar/terraeye@v0.1.0
+        uses: sanchetanparmar/terraeye@v0.1.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # config-path: terraeye.yml
-          # plan-file: terraform/tfplan.json
           fail-on: critical,high
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      # Optional later:
+      # - plan-file: ...          # for cost $/month
+      # - env OPENAI_API_KEY      # for AI recommendation text

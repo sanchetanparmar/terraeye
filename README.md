@@ -2,19 +2,35 @@
 
 **Automatic AI PR review for Terraform and AWS infrastructure.**
 
-Publish once → use in any repo with:
+Works out of the box — **no `terraeye.yml`, no Checkov/TFLint install**.
 
 ```yaml
-- uses: sanchetanparmar/terraeye@v0.1.0
+- uses: actions/checkout@v4
+- uses: sanchetanparmar/terraeye@v0.1.1
+  with:
+    fail-on: critical,high
 ```
+
+Open a PR that changes `*.tf` → TerraEye comments automatically.
+
+## What you get by default (nothing to install)
+
+| Feature | On by default? | Extra setup? |
+|---------|----------------|--------------|
+| Builtin AWS/Terraform security rules | Yes | No |
+| Inline comments (high/critical) | Yes | No |
+| PR summary comment | Yes | No |
+| GitHub Check (`fail-on: critical,high`) | Yes | No |
+| Risk score | Yes | No |
+| Cost `$/month` | Ready, but… | Needs `plan-file` (see below) |
+| AI recommendation text | Ready, but… | Needs `OPENAI_API_KEY` secret (optional) |
+| Checkov / TFLint / Trivy | **No** | Don’t use unless you want advanced setup |
+
+**You do not need a `terraeye.yml` file.** Defaults are already built into TerraEye.
 
 ## Use in another repository
 
-1. Copy [`examples/consumer-workflow.yml`](examples/consumer-workflow.yml) to that repo as `.github/workflows/terraeye.yml`
-2. (Optional) add a `terraeye.yml` config file
-3. Open a PR that changes `*.tf` / `*.tfvars`
-
-Example:
+Copy [`examples/consumer-workflow.yml`](examples/consumer-workflow.yml) to `.github/workflows/terraeye.yml`:
 
 ```yaml
 name: TerraEye
@@ -37,181 +53,81 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: sanchetanparmar/terraeye@v0.1.0
+      - uses: sanchetanparmar/terraeye@v0.1.1
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           fail-on: critical,high
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 ```
 
-GitHub downloads this Action from **this** repo and reviews the **consumer** PR.
+That’s it.
 
-## Publish / release this Action
+| Optional add-on | How |
+|-----------------|-----|
+| AI summary sentence | Add `env: OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}` |
+| Cost `$/month` + plan +/- | Generate plan + pass `plan-file` (next section) |
 
-```bash
-npm ci
-npm test
-npm run build
-git add -A
-git commit -m "Release v0.1.0"
-git tag v0.1.0
-git push origin HEAD
-git push origin v0.1.0
-```
+Comments show as `github-actions[bot]` when using the default GitHub token — normal.
 
-Consumers pin a tag (`@v0.1.0`) or a major moving tag (`@v1`).
+## Action inputs (`with:`)
 
-`dist/index.js` is committed on purpose so `uses:` works without an install step.
+| Input | Default | When to set |
+|-------|---------|-------------|
+| `fail-on` | `critical,high` | Or `none` to never fail the check |
+| `github-token` | `github.token` | Usually leave unset |
+| `plan-file` | none | Only if you want cost + plan summary |
+| `working-directory` | `.` | If Terraform lives in a subfolder |
+| `config-path` | `terraeye.yml` | Only if you created a custom config file |
 
-## Features
+## Cost (optional)
 
-- Automatic PR detection for Terraform paths
-- One living summary comment (updated, not spammed)
-- Inline comments for high/critical findings
-- Finding fingerprints + resolve detection across commits
-- Optional Terraform plan JSON, Checkov/TFLint/Trivy, AI summary
-- Configurable `fail_on` for the GitHub Check
-
-## How it works (what produces the results)
-
-TerraEye does **not** use a separate hosted backend or database.  
-It runs inside **GitHub Actions** (or locally via the CLI) and builds the review from these sources:
-
-```text
-PR / local Terraform files
-        ↓
-┌──────────────────────────────────────┐
-│ 1. GitHub API                        │
-│    Changed files + diff patches      │
-│    Posts summary comment, inline     │
-│    notes, and Check status           │
-├──────────────────────────────────────┤
-│ 2. Builtin Terraform rules           │
-│    Scans .tf for AWS security issues │
-│    (open SG/SSH, public RDS/S3,      │
-│     IAM wildcards, hardcoded secrets)│
-├──────────────────────────────────────┤
-│ 3. Terraform plan JSON (optional)    │
-│    create / change / destroy /       │
-│    replace detection                 │
-├──────────────────────────────────────┤
-│ 4. Cost engine                       │
-│    Local price heuristics from plan  │
-│    (no AWS Billing API)              │
-├──────────────────────────────────────┤
-│ 5. Optional scanners                 │
-│    Checkov / TFLint / Trivy          │
-│    (off by default)                  │
-├──────────────────────────────────────┤
-│ 6. Risk engine                       │
-│    Scores findings + plan impact     │
-├──────────────────────────────────────┤
-│ 7. AI summary (optional)             │
-│    OpenAI or Anthropic — only if     │
-│    API key is set in secrets/env     │
-└──────────────────────────────────────┘
-        ↓
-PR comment + Check + inline findings
-```
-
-| Piece | Role |
-|--------|------|
-| `GITHUB_TOKEN` | Read PR files/diff; write comment & check |
-| Builtin rules | Our TypeScript security/reliability checks on `.tf` |
-| `plan-file` | Your `terraform show -json` output (best signal) |
-| Cost module | Approximate monthly deltas from the plan |
-| Checkov / TFLint / Trivy | Extra scanners if enabled and installed |
-| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Optional short recommendation text only |
-
-Same engine for **local CLI** and **GitHub Action** — only the entrypoint differs (`dist/cli.js` vs `dist/index.js`).
-
-### Secrets & credentials
-
-- TerraEye does **not** store cloud credentials or API keys in this repo.
-- Use GitHub Actions secrets (`secrets.GITHUB_TOKEN`, `secrets.OPENAI_API_KEY`, etc.).
-- Never commit PATs, AWS keys, or `.env` files.
-- Test fixtures may contain **fake** passwords (e.g. `supersecret`) only to exercise the scanner.
-
-## Optional plan input
+Security review works **without** a plan.  
+Cost dollars need a Terraform plan JSON:
 
 ```yaml
 - uses: hashicorp/setup-terraform@v3
   with:
     terraform_wrapper: false
-- run: |
+
+- name: Terraform plan
+  working-directory: infra
+  run: |
     terraform init -input=false
     terraform plan -input=false -out=tfplan
     terraform show -json tfplan > tfplan.json
-  working-directory: infra
-- uses: sanchetanparmar/terraeye@v0.1.0
+  env:
+    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+- uses: sanchetanparmar/terraeye@v0.1.1
   with:
     plan-file: infra/tfplan.json
+    fail-on: critical,high
 ```
 
-## Optional cost analysis
+Without `plan-file`, the report may say cost needs plan JSON — security findings still work.
 
-Cost estimation is **on by default** (`cost.enabled: true`).
+## How it works
 
-It reads your Terraform plan and estimates monthly delta for common AWS resources (EC2, RDS, NAT, ALB, EKS nodes, etc.).
+No hosted backend. The Action runs in GitHub and:
 
-```yaml
-cost:
-  enabled: true
-  currency: USD
-```
+1. Reads the PR Terraform diff  
+2. Runs **builtin** security rules (built into TerraEye — nothing to install)  
+3. Optionally reads your plan JSON for destroys/replaces + cost  
+4. Optionally calls OpenAI if `OPENAI_API_KEY` is set  
+5. Posts one summary comment + inline notes + Check  
 
-Requires `plan-file` for meaningful numbers:
+## Secrets
 
-```yaml
-- uses: sanchetanparmar/terraeye@v0.1.0
-  with:
-    plan-file: infra/tfplan.json
-```
+- Do not commit API keys or cloud credentials  
+- Use GitHub Actions secrets only  
+- `GITHUB_TOKEN` is provided automatically by GitHub  
 
-Estimates are approximate on-demand list prices — not a billing quote.
-
-## Configuration (`terraeye.yml`)
-
-```yaml
-fail_on:
-  - critical
-  - high
-
-inline_comments:
-  enabled: true
-  min_severity: high
-
-ai:
-  enabled: true
-  provider: openai   # openai | anthropic | none
-  model: gpt-4o-mini
-
-scanners:
-  builtin: true
-  checkov: false
-  tflint: false
-  trivy: false
-```
-
-## Local CLI
+## Local CLI (this repo)
 
 ```bash
-npm ci
-npm run build
+npm ci && npm run build
 node dist/cli.js review \
   --cwd tests/fixtures/insecure \
-  --plan tests/fixtures/plan.json \
-  --config terraeye.yml
-```
-
-## Development
-
-```bash
-npm ci
-npm test
-npm run typecheck
-npm run build
+  --plan tests/fixtures/plan.json
 ```
 
 ## License
