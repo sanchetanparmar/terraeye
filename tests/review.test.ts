@@ -11,7 +11,7 @@ import {
   reconcileFindings,
   toReviewState,
 } from "../src/findings/tracker.js";
-import { decodeState, encodeState, formatSummaryComment } from "../src/report/format.js";
+import { decodeState, encodeState, formatPlanResourceDetail, formatPlanResourceSummary, formatSummaryComment } from "../src/report/format.js";
 import { TerraeyeConfigSchema, shouldFailCheck } from "../src/config/schema.js";
 import { analyzePullRequest } from "../src/analyze.js";
 
@@ -110,6 +110,24 @@ describe("report state round-trip", () => {
   });
 });
 
+describe("plan resource listing", () => {
+  it("lists resource addresses by action in summary", () => {
+    const plan = parsePlanJson(readFileSync(resolve(fixtures, "plan.json"), "utf8"));
+    const summary = formatPlanResourceSummary(plan);
+    expect(summary.join("\n")).toContain("aws_instance.web");
+    expect(summary.join("\n")).toContain("aws_security_group.app");
+    expect(summary.join("\n")).toContain("aws_db_instance.production");
+    expect(summary.join("\n")).toMatch(/Replace:\s+1/);
+  });
+
+  it("includes resource detail with types", () => {
+    const plan = parsePlanJson(readFileSync(resolve(fixtures, "plan.json"), "utf8"));
+    const detail = formatPlanResourceDetail(plan).join("\n");
+    expect(detail).toContain("`aws_db_instance.production` (aws_db_instance)");
+    expect(detail).toContain("force-new");
+  });
+});
+
 describe("end-to-end analyze", () => {
   it("produces a TerraEye summary for insecure fixture", async () => {
     const config = TerraeyeConfigSchema.parse({
@@ -135,6 +153,8 @@ describe("end-to-end analyze", () => {
     expect(md).toContain("SECURITY");
     expect(md).toContain("COST");
     expect(result.cost.enabled).toBe(true);
+    expect(md).toContain("aws_instance.web");
+    expect(md).toContain("aws_db_instance.production");
     // db.t3.medium → db.r6g.large should produce a positive monthly delta
     expect(result.cost.monthlyDeltaUsd).toBeGreaterThan(0);
   });
