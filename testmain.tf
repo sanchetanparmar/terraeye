@@ -35,3 +35,4 @@ resource "aws_s3_bucket" "logs" {
   bucket = "company-logs-example"
   acl    = "public-read"
 }
+
