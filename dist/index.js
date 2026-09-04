@@ -34174,10 +34174,7 @@ ${details}
     "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501",
     "",
     "Resources:",
-    `  \u{1F7E2} Create:   ${plan.add}`,
-    `  \u{1F7E1} Modify:   ${plan.change}`,
-    `  \u{1F534} Destroy:  ${plan.destroy}`,
-    plan.replace ? `  \u267B\uFE0F Replace:  ${plan.replace}` : null,
+    ...formatPlanResourceSummary(plan),
     "",
     `Risk Score: ${risk.score}/100`,
     `Risk Level: ${RISK_EMOJI[risk.level]} ${risk.level.toUpperCase()}`,
@@ -34194,7 +34191,11 @@ ${details}
     "\u{1F4CB} TERRAFORM PLAN",
     "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501",
     "",
-    plan.rawAvailable ? `${plan.add} to add  \xB7  ${plan.change} to change  \xB7  ${plan.destroy} to destroy` : "_No plan JSON provided \u2014 static analysis only. Pass `plan_file` for full plan review._",
+    plan.rawAvailable ? [
+      `${plan.add} to add  \xB7  ${plan.change} to change  \xB7  ${plan.destroy} to destroy`,
+      "",
+      ...formatPlanResourceDetail(plan)
+    ].join("\n") : "_No plan JSON provided \u2014 static analysis only. Pass `plan_file` for full plan review._",
     "",
     "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501",
     "\u{1F916} RECOMMENDATION",
@@ -34206,6 +34207,69 @@ ${details}
     "",
     `Reviewed commit: \`${result.commitSha.slice(0, 7)}\``
   ].filter((l) => l !== null).join("\n");
+}
+var PLAN_LIST_LIMIT = 15;
+function resourcesByAction(plan, action) {
+  return plan.resources.filter((r) => r.action === action);
+}
+function formatResourceList(resources, limit = PLAN_LIST_LIMIT) {
+  if (!resources.length) return [];
+  const lines = [];
+  const shown = resources.slice(0, limit);
+  for (const r of shown) {
+    lines.push(`    - \`${r.address}\``);
+  }
+  const remaining = resources.length - shown.length;
+  if (remaining > 0) {
+    lines.push(`    - _\u2026and ${remaining} more_`);
+  }
+  return lines;
+}
+function formatPlanResourceSummary(plan) {
+  if (!plan.rawAvailable) {
+    return ["  _No plan JSON \u2014 resource names unavailable_"];
+  }
+  const groups = [
+    { emoji: "\u{1F7E2}", label: "Create", action: "create" },
+    { emoji: "\u{1F7E1}", label: "Modify", action: "update" },
+    { emoji: "\u{1F534}", label: "Destroy", action: "delete" },
+    { emoji: "\u267B\uFE0F", label: "Replace", action: "replace" }
+  ];
+  const lines = [];
+  for (const g of groups) {
+    const items = resourcesByAction(plan, g.action);
+    if (!items.length) continue;
+    lines.push(`  ${g.emoji} ${g.label}:   ${items.length}`);
+    lines.push(...formatResourceList(items));
+  }
+  if (!lines.length) {
+    lines.push("  _No resource changes in plan_");
+  }
+  return lines;
+}
+function formatPlanResourceDetail(plan) {
+  if (!plan.rawAvailable) return [];
+  const lines = [];
+  const groups = [
+    { label: "Create", action: "create" },
+    { label: "Modify", action: "update" },
+    { label: "Destroy", action: "delete" },
+    { label: "Replace", action: "replace" }
+  ];
+  for (const g of groups) {
+    const items = resourcesByAction(plan, g.action);
+    if (!items.length) continue;
+    lines.push(`**${g.label} (${items.length})**`);
+    for (const r of items.slice(0, PLAN_LIST_LIMIT)) {
+      const extra = g.action === "replace" && r.replacePaths?.length ? ` \u2014 force-new: ${r.replacePaths.join(", ")}` : "";
+      lines.push(`- \`${r.address}\` (${r.type})${extra}`);
+    }
+    if (items.length > PLAN_LIST_LIMIT) {
+      lines.push(`- _\u2026and ${items.length - PLAN_LIST_LIMIT} more_`);
+    }
+    lines.push("");
+  }
+  return lines;
 }
 function section(title, findings) {
   if (!findings.length) return "";

@@ -1,4 +1,4 @@
-import type { Finding, ReviewResult, ReviewState } from "../types.js";
+import type { Finding, PlanSummary, PlanResourceChange, ReviewResult, ReviewState } from "../types.js";
 import { RISK_EMOJI, SEVERITY_EMOJI } from "../types.js";
 import { countBySeverity } from "../findings/tracker.js";
 import type { TerraeyeConfig } from "../config/schema.js";
@@ -86,10 +86,7 @@ export function formatSummaryComment(
     "━━━━━━━━━━━━━━━━━━━━━━",
     "",
     "Resources:",
-    `  🟢 Create:   ${plan.add}`,
-    `  🟡 Modify:   ${plan.change}`,
-    `  🔴 Destroy:  ${plan.destroy}`,
-    plan.replace ? `  ♻️ Replace:  ${plan.replace}` : null,
+    ...formatPlanResourceSummary(plan),
     "",
     `Risk Score: ${risk.score}/100`,
     `Risk Level: ${RISK_EMOJI[risk.level]} ${risk.level.toUpperCase()}`,
@@ -111,7 +108,11 @@ export function formatSummaryComment(
     "━━━━━━━━━━━━━━━━━━━━━━",
     "",
     plan.rawAvailable
-      ? `${plan.add} to add  ·  ${plan.change} to change  ·  ${plan.destroy} to destroy`
+      ? [
+          `${plan.add} to add  ·  ${plan.change} to change  ·  ${plan.destroy} to destroy`,
+          "",
+          ...formatPlanResourceDetail(plan),
+        ].join("\n")
       : "_No plan JSON provided — static analysis only. Pass `plan_file` for full plan review._",
     "",
     "━━━━━━━━━━━━━━━━━━━━━━",
@@ -126,6 +127,87 @@ export function formatSummaryComment(
   ]
     .filter((l) => l !== null)
     .join("\n");
+}
+
+const PLAN_LIST_LIMIT = 15;
+
+function resourcesByAction(
+  plan: PlanSummary,
+  action: PlanResourceChange["action"]
+): PlanResourceChange[] {
+  return plan.resources.filter((r) => r.action === action);
+}
+
+function formatResourceList(resources: PlanResourceChange[], limit = PLAN_LIST_LIMIT): string[] {
+  if (!resources.length) return [];
+  const lines: string[] = [];
+  const shown = resources.slice(0, limit);
+  for (const r of shown) {
+    lines.push(`    - \`${r.address}\``);
+  }
+  const remaining = resources.length - shown.length;
+  if (remaining > 0) {
+    lines.push(`    - _…and ${remaining} more_`);
+  }
+  return lines;
+}
+
+/** Compact resource breakdown for the SUMMARY section. */
+export function formatPlanResourceSummary(plan: PlanSummary): string[] {
+  if (!plan.rawAvailable) {
+    return ["  _No plan JSON — resource names unavailable_"];
+  }
+
+  const groups: Array<{ emoji: string; label: string; action: PlanResourceChange["action"] }> = [
+    { emoji: "🟢", label: "Create", action: "create" },
+    { emoji: "🟡", label: "Modify", action: "update" },
+    { emoji: "🔴", label: "Destroy", action: "delete" },
+    { emoji: "♻️", label: "Replace", action: "replace" },
+  ];
+
+  const lines: string[] = [];
+  for (const g of groups) {
+    const items = resourcesByAction(plan, g.action);
+    if (!items.length) continue;
+    lines.push(`  ${g.emoji} ${g.label}:   ${items.length}`);
+    lines.push(...formatResourceList(items));
+  }
+
+  if (!lines.length) {
+    lines.push("  _No resource changes in plan_");
+  }
+  return lines;
+}
+
+/** Detailed resource list for the TERRAFORM PLAN section. */
+export function formatPlanResourceDetail(plan: PlanSummary): string[] {
+  if (!plan.rawAvailable) return [];
+
+  const lines: string[] = [];
+  const groups: Array<{ label: string; action: PlanResourceChange["action"] }> = [
+    { label: "Create", action: "create" },
+    { label: "Modify", action: "update" },
+    { label: "Destroy", action: "delete" },
+    { label: "Replace", action: "replace" },
+  ];
+
+  for (const g of groups) {
+    const items = resourcesByAction(plan, g.action);
+    if (!items.length) continue;
+    lines.push(`**${g.label} (${items.length})**`);
+    for (const r of items.slice(0, PLAN_LIST_LIMIT)) {
+      const extra =
+        g.action === "replace" && r.replacePaths?.length
+          ? ` — force-new: ${r.replacePaths.join(", ")}`
+          : "";
+      lines.push(`- \`${r.address}\` (${r.type})${extra}`);
+    }
+    if (items.length > PLAN_LIST_LIMIT) {
+      lines.push(`- _…and ${items.length - PLAN_LIST_LIMIT} more_`);
+    }
+    lines.push("");
+  }
+  return lines;
 }
 
 function section(title: string, findings: Finding[]): string {
